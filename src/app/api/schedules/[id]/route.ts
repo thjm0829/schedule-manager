@@ -33,11 +33,13 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     where: { id: params.id },
     data: {
       title: result.data.title,
-      description: result.data.description ?? null,
+      memo: result.data.memo ?? null,
       location: result.data.location ?? null,
-      startAt: new Date(result.data.startAt),
-      endAt: new Date(result.data.endAt),
+      startDate: new Date(result.data.startDate),
+      endDate: new Date(result.data.endDate),
       allDay: result.data.allDay ?? false,
+      type: result.data.type,
+      status: result.data.status,
     },
   });
 

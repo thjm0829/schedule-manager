@@ -4,7 +4,7 @@ import { validateScheduleInput } from "@/lib/validateSchedule";
 
 export async function GET() {
   const schedules = await prisma.schedule.findMany({
-    orderBy: { startAt: "asc" },
+    orderBy: { startDate: "asc" },
   });
   return NextResponse.json(schedules);
 }
@@ -20,11 +20,13 @@ export async function POST(request: NextRequest) {
   const schedule = await prisma.schedule.create({
     data: {
       title: result.data.title,
-      description: result.data.description ?? null,
+      memo: result.data.memo ?? null,
       location: result.data.location ?? null,
-      startAt: new Date(result.data.startAt),
-      endAt: new Date(result.data.endAt),
+      startDate: new Date(result.data.startDate),
+      endDate: new Date(result.data.endDate),
       allDay: result.data.allDay ?? false,
+      type: result.data.type,
+      status: result.data.status,
     },
   });
 

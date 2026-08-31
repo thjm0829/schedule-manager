@@ -11,7 +11,7 @@ type Props = {
 
 export default function ScheduleList({ schedules, onEdit, onDelete }: Props) {
   if (schedules.length === 0) {
-    return <p className="text-sm text-slate-500">등록된 일정이 없습니다.</p>;
+    return <p className="text-sm text-slate-400">등록된 일정이 없습니다.</p>;
   }
 
   return (

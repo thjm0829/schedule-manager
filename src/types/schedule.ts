@@ -1,20 +1,26 @@
+import type { ScheduleStatus, ScheduleType } from "@/lib/scheduleMeta";
+
 export type Schedule = {
   id: string;
   title: string;
-  description: string | null;
+  memo: string | null;
   location: string | null;
-  startAt: string;
-  endAt: string;
+  startDate: string;
+  endDate: string;
   allDay: boolean;
+  status: ScheduleStatus;
+  type: ScheduleType;
   createdAt: string;
   updatedAt: string;
 };
 
 export type ScheduleInput = {
   title: string;
-  description?: string;
+  memo?: string;
   location?: string;
-  startAt: string;
-  endAt: string;
+  startDate: string;
+  endDate: string;
   allDay?: boolean;
+  status?: ScheduleStatus;
+  type: ScheduleType;
 };
