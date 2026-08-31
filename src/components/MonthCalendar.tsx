@@ -1,7 +1,7 @@
 "use client";
 
 import type { Schedule } from "@/types/schedule";
-import { TYPE_COLORS } from "@/lib/scheduleMeta";
+import { STATUS_COLORS, TYPE_COLORS } from "@/lib/scheduleMeta";
 import { seoulDateKey, seoulDateKeysBetween } from "@/lib/timezone";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -121,8 +121,17 @@ export default function MonthCalendar({
               <div className="space-y-0.5">
                 {daySchedules.slice(0, 2).map((s) => {
                   const color = TYPE_COLORS[s.type];
+                  const isDone = Boolean(STATUS_COLORS[s.status].strikethrough);
                   return (
-                    <div key={s.id} className={`truncate rounded border px-1 py-0.5 text-[10px] ${color.badge}`}>
+                    <div
+                      key={s.id}
+                      className={[
+                        "truncate rounded border px-1 py-0.5 text-[10px]",
+                        color.badge,
+                        isDone ? "line-through opacity-60" : "",
+                      ].join(" ")}
+                    >
+                      {isDone ? "✓ " : ""}
                       {s.title}
                     </div>
                   );

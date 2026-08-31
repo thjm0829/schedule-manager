@@ -1,83 +1,86 @@
 # 일정 관리 플랫폼
 
-일정을 추가/수정/삭제할 수 있는 웹앱입니다.
+일정을 달력/목록 형태로 보여주는 정적(static) 웹앱입니다. 데이터베이스나 서버 없이, `src/data/schedules.json` 파일의 내용을 빌드 시점에 정적 HTML/JS로 구워서 보여줍니다. 별도의 로그인/비밀번호도 없습니다 — 조회 전용 사이트입니다.
 
 ## 기술 스택
 
-- Next.js 14 (App Router) + TypeScript
-- Prisma + SQLite (로컬 개발용, 필요 시 PostgreSQL 등으로 교체 가능)
+- Next.js 14 (App Router, `output: "export"` 정적 내보내기) + TypeScript
 - Tailwind CSS
-- 비밀번호 하나로 사이트 전체를 잠그는 자체 게이트 (로그인/회원 시스템 없음)
+- 데이터: `src/data/schedules.json` (정적 파일, 빌드 시 번들에 포함됨)
 
-## 시작하기
+## 일정 데이터 수정하기
 
-이 환경에는 Node.js가 설치되어 있지 않아 의존성 설치를 진행하지 못했습니다.
-[Node.js](https://nodejs.org) (18 이상 권장) 설치 후 아래 순서로 진행하세요.
+`src/data/schedules.json`을 직접 편집합니다. 각 항목의 형태는 다음과 같습니다.
+
+```json
+{
+  "id": "고유 id (문자열, 아무 값이나 유일하면 됨)",
+  "title": "일정 제목",
+  "memo": "메모 (선택, 없으면 null)",
+  "location": "장소 (선택, 없으면 null)",
+  "startDate": "2026-09-01T00:00:00.000Z",
+  "endDate": "2026-09-01T00:00:00.000Z",
+  "allDay": true,
+  "status": "예정",
+  "type": "개인",
+  "createdAt": "2026-08-31T00:00:00.000Z",
+  "updatedAt": "2026-08-31T00:00:00.000Z"
+}
+```
+
+- `status`: `예정` | `진행` | `완료`
+- `type`: `약속` | `업무` | `개인` | `건강` | `중요`
+- 날짜/시간은 한국 표준시(Asia/Seoul, UTC+9) 기준으로 화면에 표시됩니다 (`src/lib/timezone.ts`).
+- 여러 날에 걸친 일정은 `startDate`~`endDate` 사이 모든 날짜 칸에 표시됩니다.
+
+파일을 수정한 뒤 커밋해서 `main`/`master`에 푸시하면 GitHub Actions가 자동으로 다시 빌드해서 배포합니다.
+
+## 로컬에서 실행하기
 
 ```bash
-# 1. 의존성 설치
 npm install
 
-# 2. 환경변수 파일 생성
-cp .env.example .env
-```
-
-`.env` 파일을 열어 두 값을 채워주세요.
-
-- `SITE_PASSWORD` — 접속할 때 입력할 비밀번호 (원하는 값으로 직접 설정)
-- `COOKIE_SECRET` — 로그인 비밀번호와 무관한, 인증 쿠키 검증용 랜덤 문자열. 아래 명령으로 생성:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-```bash
-# 3. DB 마이그레이션 (SQLite 파일 및 테이블 생성)
-npm run prisma:migrate -- --name init
-
-# 4. 개발 서버 실행
+# 개발 서버 (핫 리로드)
 npm run dev
+
+# 정적 빌드 (out/ 디렉터리 생성)
+npm run build
+
+# 빌드 결과 미리보기
+npx serve out
 ```
-
-브라우저에서 http://localhost:3000 접속 시 `/unlock` 페이지로 이동하며, `SITE_PASSWORD`를 입력해야 이후 화면(일정 목록/API 포함)에 접근할 수 있습니다. 인증은 브라우저 쿠키에 30일간 저장됩니다.
-
-배포 시(Vercel 등)에는 `.env`가 아니라 호스팅 플랫폼의 환경변수 설정에 `SITE_PASSWORD`, `COOKIE_SECRET`을 등록하세요.
 
 ## 프로젝트 구조
 
 ```
 schedule-manager/
-├── prisma/
-│   └── schema.prisma        # Schedule 모델 정의
+├── .github/workflows/deploy.yml  # GitHub Pages 배포 워크플로우
 ├── src/
-│   ├── middleware.ts         # 모든 요청을 가로채 인증 쿠키 확인, 없으면 /unlock으로
+│   ├── data/
+│   │   └── schedules.json   # 일정 데이터 (직접 수정)
 │   ├── app/
-│   │   ├── api/
-│   │   │   ├── schedules/
-│   │   │   │   ├── route.ts     # GET(목록), POST(생성)
-│   │   │   │   └── [id]/route.ts# GET/PATCH/DELETE(단건)
-│   │   │   └── unlock/route.ts  # 비밀번호 검증 및 인증 쿠키 발급
-│   │   ├── unlock/
-│   │   │   ├── page.tsx
-│   │   │   └── UnlockForm.tsx   # 비밀번호 입력 폼
 │   │   ├── layout.tsx
-│   │   ├── page.tsx         # 메인 화면 (폼 + 목록)
+│   │   ├── page.tsx          # 메인 화면 (캘린더 + 선택한 날짜의 일정 목록)
 │   │   └── globals.css
 │   ├── components/
-│   │   ├── ScheduleForm.tsx
+│   │   ├── MonthCalendar.tsx
 │   │   ├── ScheduleList.tsx
 │   │   └── ScheduleItem.tsx
 │   ├── lib/
-│   │   ├── prisma.ts        # Prisma 클라이언트 싱글톤
-│   │   ├── validateSchedule.ts
-│   │   └── auth.ts          # 인증 쿠키 이름/유효기간 상수
+│   │   ├── scheduleMeta.ts   # 유형/상태 라벨 및 색상 규칙
+│   │   └── timezone.ts       # Asia/Seoul 기준 날짜 계산
 │   └── types/
 │       └── schedule.ts
-└── .env.example
+└── next.config.js            # output: "export", basePath 설정
 ```
 
-## 다음 단계 아이디어
+## GitHub Pages 배포
 
-- 캘린더/월간 뷰 UI (예: `date-fns` + 커스텀 그리드)
-- 반복 일정, 알림/리마인더
-- PostgreSQL로 전환 후 Vercel + Supabase/Neon 배포
+`.github/workflows/deploy.yml`이 `main`/`master` 브랜치에 푸시될 때마다 자동으로:
+
+1. `npm ci` → `npm run build` (정적 export, `BASE_PATH`를 저장소 이름으로 자동 설정)
+2. 빌드 결과(`out/`)를 GitHub Pages에 배포
+
+**저장소 설정에서 한 번만** GitHub Pages 소스를 "GitHub Actions"로 지정해야 합니다: 저장소 → Settings → Pages → Build and deployment → Source → "GitHub Actions".
+
+배포되면 `https://<사용자명>.github.io/<저장소명>/`에서 접속할 수 있습니다.

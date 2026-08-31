@@ -1,16 +1,11 @@
-"use client";
-
 import type { Schedule } from "@/types/schedule";
 import ScheduleItem from "./ScheduleItem";
 
 type Props = {
   schedules: Schedule[];
-  onEdit: (schedule: Schedule) => void;
-  onDelete: (id: string) => void;
-  onToggleComplete: (schedule: Schedule) => void;
 };
 
-export default function ScheduleList({ schedules, onEdit, onDelete, onToggleComplete }: Props) {
+export default function ScheduleList({ schedules }: Props) {
   if (schedules.length === 0) {
     return <p className="text-sm text-slate-400">등록된 일정이 없습니다.</p>;
   }
@@ -18,13 +13,7 @@ export default function ScheduleList({ schedules, onEdit, onDelete, onToggleComp
   return (
     <ul className="space-y-2">
       {schedules.map((schedule) => (
-        <ScheduleItem
-          key={schedule.id}
-          schedule={schedule}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onToggleComplete={onToggleComplete}
-        />
+        <ScheduleItem key={schedule.id} schedule={schedule} />
       ))}
     </ul>
   );
