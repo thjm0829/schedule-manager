@@ -98,10 +98,10 @@
     "startDate": "2026-08-24T15:00:00.000Z",
     "endDate": "2026-08-27T15:00:00.000Z",
     "allDay": true,
-    "status": "예정",
+    "status": "완료",
     "type": "업무",
     "createdAt": "2026-08-31T04:21:31.920Z",
-    "updatedAt": "2026-08-31T04:21:31.920Z"
+    "updatedAt": "2026-08-31T06:00:00.000Z"
   },
   {
     "id": "cmtgqe9au0008lrdya8n7nhu2",
