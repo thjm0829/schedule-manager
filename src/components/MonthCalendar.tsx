@@ -2,7 +2,7 @@
 
 import type { Schedule } from "@/types/schedule";
 import { TYPE_COLORS } from "@/lib/scheduleMeta";
-import { seoulDateKey } from "@/lib/timezone";
+import { seoulDateKey, seoulDateKeysBetween } from "@/lib/timezone";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -46,10 +46,12 @@ export default function MonthCalendar({
 
   const schedulesByDay = new Map<string, Schedule[]>();
   for (const s of schedules) {
-    const key = seoulDateKey(new Date(s.startDate));
-    const bucket = schedulesByDay.get(key);
-    if (bucket) bucket.push(s);
-    else schedulesByDay.set(key, [s]);
+    const keys = seoulDateKeysBetween(new Date(s.startDate), new Date(s.endDate));
+    for (const key of keys) {
+      const bucket = schedulesByDay.get(key);
+      if (bucket) bucket.push(s);
+      else schedulesByDay.set(key, [s]);
+    }
   }
 
   return (

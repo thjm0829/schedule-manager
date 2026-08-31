@@ -5,7 +5,7 @@ import MonthCalendar from "@/components/MonthCalendar";
 import ScheduleForm from "@/components/ScheduleForm";
 import ScheduleList from "@/components/ScheduleList";
 import type { Schedule, ScheduleInput } from "@/types/schedule";
-import { isSameSeoulDay } from "@/lib/timezone";
+import { isSeoulDayWithinRange } from "@/lib/timezone";
 
 function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -15,6 +15,7 @@ export default function HomePage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -54,6 +55,7 @@ export default function HomePage() {
     }
 
     setEditingSchedule(null);
+    setShowForm(false);
     await loadSchedules();
   }
 
@@ -65,11 +67,44 @@ export default function HomePage() {
       alert("삭제에 실패했습니다.");
       return;
     }
-    if (editingSchedule?.id === id) setEditingSchedule(null);
+    if (editingSchedule?.id === id) {
+      setEditingSchedule(null);
+      setShowForm(false);
+    }
     await loadSchedules();
   }
 
-  const selectedDaySchedules = schedules.filter((s) => isSameSeoulDay(new Date(s.startDate), selectedDate));
+  function handleEdit(schedule: Schedule) {
+    setEditingSchedule(schedule);
+    setShowForm(true);
+  }
+
+  async function handleToggleComplete(schedule: Schedule) {
+    const nextStatus = schedule.status === "완료" ? "예정" : "완료";
+    const res = await fetch(`/api/schedules/${schedule.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: schedule.title,
+        memo: schedule.memo ?? undefined,
+        location: schedule.location ?? undefined,
+        startDate: schedule.startDate,
+        endDate: schedule.endDate,
+        allDay: schedule.allDay,
+        type: schedule.type,
+        status: nextStatus,
+      }),
+    });
+    if (!res.ok) {
+      alert("상태 변경에 실패했습니다.");
+      return;
+    }
+    await loadSchedules();
+  }
+
+  const selectedDaySchedules = schedules.filter((s) =>
+    isSeoulDayWithinRange(selectedDate, new Date(s.startDate), new Date(s.endDate))
+  );
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -95,19 +130,36 @@ export default function HomePage() {
       </div>
 
       <div className="mb-8">
-        <ScheduleForm
-          editingSchedule={editingSchedule}
-          defaultDate={selectedDate}
-          onSubmit={handleSubmit}
-          onCancelEdit={() => setEditingSchedule(null)}
-        />
+        {showForm ? (
+          <ScheduleForm
+            editingSchedule={editingSchedule}
+            defaultDate={selectedDate}
+            onSubmit={handleSubmit}
+            onCancelEdit={() => {
+              setEditingSchedule(null);
+              setShowForm(false);
+            }}
+          />
+        ) : (
+          <button
+            onClick={() => setShowForm(true)}
+            className="w-full rounded-lg border border-dashed border-slate-600 px-4 py-3 text-sm font-medium text-slate-300 hover:border-slate-400 hover:bg-slate-800"
+          >
+            + 일정 추가
+          </button>
+        )}
       </div>
 
       <h2 className="mb-3 text-lg font-semibold text-slate-100">
         {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일 일정
       </h2>
       {!loading && !listError && (
-        <ScheduleList schedules={selectedDaySchedules} onEdit={setEditingSchedule} onDelete={handleDelete} />
+        <ScheduleList
+          schedules={selectedDaySchedules}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggleComplete={handleToggleComplete}
+        />
       )}
     </main>
   );

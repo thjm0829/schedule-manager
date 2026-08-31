@@ -30,30 +30,41 @@ type Props = {
   schedule: Schedule;
   onEdit: (schedule: Schedule) => void;
   onDelete: (id: string) => void;
+  onToggleComplete: (schedule: Schedule) => void;
 };
 
-export default function ScheduleItem({ schedule, onEdit, onDelete }: Props) {
+export default function ScheduleItem({ schedule, onEdit, onDelete, onToggleComplete }: Props) {
   const typeColor = TYPE_COLORS[schedule.type];
   const statusColor = STATUS_COLORS[schedule.status];
+  const isDone = schedule.status === "완료";
 
   return (
     <li className="flex items-start justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800 p-4 shadow-sm">
-      <div>
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${typeColor.badge}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${typeColor.dot}`} />
-            {schedule.type}
-          </span>
-          <span className={`rounded-full border px-2 py-0.5 text-xs ${statusColor.badge}`}>{schedule.status}</span>
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={() => onToggleComplete(schedule)}
+          aria-label="완료 처리"
+          className="mt-1 h-4 w-4 shrink-0 accent-green-500"
+        />
+        <div>
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${typeColor.badge}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${typeColor.dot}`} />
+              {schedule.type}
+            </span>
+            <span className={`rounded-full border px-2 py-0.5 text-xs ${statusColor.badge}`}>{schedule.status}</span>
+          </div>
+          <p className={`font-medium text-slate-100 ${statusColor.strikethrough ? "line-through opacity-70" : ""}`}>
+            {schedule.title}
+          </p>
+          <p className="text-sm text-slate-400">
+            {formatRange(schedule.startDate, schedule.endDate, schedule.allDay)}
+          </p>
+          {schedule.location && <p className="text-sm text-slate-400">📍 {schedule.location}</p>}
+          {schedule.memo && <p className="mt-1 text-sm text-slate-300">{schedule.memo}</p>}
         </div>
-        <p className={`font-medium text-slate-100 ${statusColor.strikethrough ? "line-through opacity-70" : ""}`}>
-          {schedule.title}
-        </p>
-        <p className="text-sm text-slate-400">
-          {formatRange(schedule.startDate, schedule.endDate, schedule.allDay)}
-        </p>
-        {schedule.location && <p className="text-sm text-slate-400">📍 {schedule.location}</p>}
-        {schedule.memo && <p className="mt-1 text-sm text-slate-300">{schedule.memo}</p>}
       </div>
       <div className="flex shrink-0 gap-2">
         <button
